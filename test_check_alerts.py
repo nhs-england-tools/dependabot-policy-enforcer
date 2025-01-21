@@ -3,8 +3,9 @@ import os
 import json
 from unittest.mock import patch, mock_open, Mock
 from github import GithubException
+from datetime import datetime, timezone, timedelta
 
-from check_alerts import get_pr_number, create_or_update_pr_comment
+from check_alerts import get_pr_number, create_or_update_pr_comment, get_alert_age, get_thresholds_from_env, get_github_repo
 
 class TestGetPRNumber(unittest.TestCase):
 
@@ -88,7 +89,6 @@ class TestCreateOrUpdatePRComment(unittest.TestCase):
 
         create_or_update_pr_comment(mock_repo, 1, "New Comment Body")
 
-
         # If we reached here the function handled the GithubException correctly by not raising it again
 
     @patch('check_alerts.Github')
@@ -98,5 +98,79 @@ class TestCreateOrUpdatePRComment(unittest.TestCase):
         mock_github.return_value.get_repo.return_value = mock_repo
 
         create_or_update_pr_comment(mock_repo, 1, "New Comment Body")
-        # same as the github exception
+        
 
+
+class TestGetAlertAge(unittest.TestCase):
+
+    def test_get_alert_age_recent(self):
+        created_at = datetime.now(timezone.utc) - timedelta(days=2)
+        self.assertEqual(get_alert_age(created_at), 2)
+
+    def test_get_alert_age_old(self):
+        created_at = datetime.now(timezone.utc) - timedelta(days=35)
+        self.assertEqual(get_alert_age(created_at), 35)
+
+    def test_get_alert_age_same_day(self):
+        created_at = datetime.now(timezone.utc) - timedelta(hours=5)
+        self.assertEqual(get_alert_age(created_at), 0)
+
+    def test_get_alert_age_future(self):
+        created_at = datetime.now(timezone.utc) + timedelta(days=1)
+        self.assertEqual(get_alert_age(created_at), -1)
+
+class TestGetThresholdsFromEnv(unittest.TestCase):
+
+    @patch.dict(os.environ, {'INPUT_CRITICAL_THRESHOLD': '1', 'INPUT_HIGH_THRESHOLD': '2', 'INPUT_MEDIUM_THRESHOLD': '7', 'INPUT_LOW_THRESHOLD': '15'})
+    def test_get_thresholds_from_env_set(self):
+        expected_thresholds = {
+            'CRITICAL': 1,
+            'HIGH': 2,
+            'MEDIUM': 7,
+            'LOW': 15
+        }
+        self.assertEqual(get_thresholds_from_env(), expected_thresholds)
+
+    @patch.dict(os.environ, {})
+    def test_get_thresholds_from_env_default(self):
+        expected_thresholds = {
+            'CRITICAL': 3,
+            'HIGH': 5,
+            'MEDIUM': 14,
+            'LOW': 30
+        }
+        self.assertEqual(get_thresholds_from_env(), expected_thresholds)
+
+
+    @patch.dict(os.environ, {'INPUT_CRITICAL_THRESHOLD': 'invalid'})
+    def test_get_thresholds_from_env_invalid_input(self):
+        with self.assertRaises(ValueError):
+            get_thresholds_from_env()
+
+class TestGetGithubRepo(unittest.TestCase):
+
+    @patch.dict(os.environ, {'GITHUB_REPOSITORY': 'test_org/test_repo'})
+    @patch('check_alerts.Github')
+    def test_get_github_repo_success(self, mock_github):
+        mock_repo = Mock()
+        mock_repo.full_name = "test_org/test_repo"
+        mock_github.return_value.get_repo.return_value = mock_repo
+
+        repo = get_github_repo('test_token')
+
+        self.assertEqual(repo.full_name, "test_org/test_repo")
+
+
+    def test_get_github_repo_no_repo_name(self):
+        with patch.dict(os.environ, clear=True):
+            with self.assertRaises(AssertionError):
+                get_github_repo('test_token')
+
+
+    @patch.dict(os.environ, {'GITHUB_REPOSITORY': 'test_org/test_repo'})
+    @patch('check_alerts.Github')
+    def test_get_github_repo_github_exception(self, mock_github):
+        mock_github.return_value.get_repo.side_effect = GithubException(404, "Repo not found")
+
+        with self.assertRaises(GithubException):
+            get_github_repo('test_token')

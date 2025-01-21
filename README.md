@@ -1,7 +1,7 @@
-# Repository Template
+# Dependabot Policy Enforcer
 
-[![CI/CD Pull Request](https://github.com/nhs-england-tools/repository-template/actions/workflows/cicd-1-pull-request.yaml/badge.svg)](https://github.com/nhs-england-tools/repository-template/actions/workflows/cicd-1-pull-request.yaml)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=repository-template&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=repository-template)
+[![CI/CD Pull Request](https://github.com/nhs-england-tools/dependabot-policy-enforcer/actions/workflows/cicd-1-pull-request.yaml/badge.svg)](https://github.com/nhs-england-tools/dependabot-policy-enforcer/actions/workflows/cicd-1-pull-request.yaml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=nhsdigital_nhs-england-tools_dependabot-policy-enforcer&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=nhsdigital_nhs-england-tools_dependabot-policy-enforcer)
 
 Start with an overview or a brief description of what the project is about and what it does. For example -
 
@@ -16,7 +16,7 @@ Make use of this repository template to expedite your project setup and enhance 
 
 ## Table of Contents
 
-- [Repository Template](#repository-template)
+- [Dependabot Policy Enforcer](#dependabot-policy-enforcer)
   - [Table of Contents](#table-of-contents)
   - [Setup](#setup)
     - [Prerequisites](#prerequisites)
