@@ -98,7 +98,6 @@ class TestCreateOrUpdatePRComment(unittest.TestCase):
         mock_github.return_value.get_repo.return_value = mock_repo
 
         create_or_update_pr_comment(mock_repo, 1, "New Comment Body")
-        
 
 
 class TestGetAlertAge(unittest.TestCase):
