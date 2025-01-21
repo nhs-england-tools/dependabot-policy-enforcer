@@ -34,6 +34,10 @@ def create_or_update_pr_comment(repo, pr_number, body):
     except GithubException as e:
         print(f"Error posting comment to PR: {e}")
         return
+    except Exception as e:
+        print(f"Error posting comment to PR: {e}")
+        return
+
 
 def get_alert_age(created_at):
     now = datetime.now(timezone.utc)
