@@ -6,24 +6,24 @@ from github import Auth, Github, GithubException, Repository
 import sys
 
 
-def get_pr_number(repo: Repository):
+def get_pr_number(repo):
     event_name = os.getenv("GITHUB_EVENT_NAME")
     event_path = os.getenv("GITHUB_EVENT_PATH")
     print(f"Event name: {event_name}")
     event = {}
 
-    if event_path:
-        with open(event_path) as f:
-            event = json.load(f)
+    try:
+        if event_path:
+            with open(event_path) as f:
+                event = json.load(f)
+    except Exception as e:
+        print(f"Error reading event file: {e}")
 
     if event_name == "pull_request":
         print("This is a Pull Request")
-        try:
-            pr_number = event.get("pull_request", {}).get("number")
-            if pr_number:
-                return pr_number
-        except Exception as e:
-            print(f"Error reading event file: {e}")
+        pr_number = event.get("pull_request", {}).get("number")
+        if pr_number:
+            return pr_number
 
     elif event_name == "push":
         print("This is a Push event")

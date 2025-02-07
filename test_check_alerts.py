@@ -30,7 +30,8 @@ class TestGetPRNumber(unittest.TestCase):
         read_data='{"pull_request": {"number": 123}}',
     )
     def test_get_pr_number_success(self, mock_file):
-        self.assertEqual(get_pr_number(), 123)
+        mock_repo = MagicMock()
+        self.assertEqual(get_pr_number(mock_repo), 123)
 
     @patch.dict(
         os.environ,
@@ -41,7 +42,8 @@ class TestGetPRNumber(unittest.TestCase):
     )
     @patch("builtins.open", new_callable=mock_open, read_data="{}")
     def test_get_pr_number_no_pull_request_key(self, mock_file):
-        self.assertIsNone(get_pr_number())
+        mock_repo = MagicMock()
+        self.assertIsNone(get_pr_number(mock_repo))
 
     @patch.dict(
         os.environ,
@@ -52,15 +54,18 @@ class TestGetPRNumber(unittest.TestCase):
     )
     @patch("builtins.open", new_callable=mock_open, read_data='{"pull_request": {}}')
     def test_get_pr_number_no_number_key(self, mock_file):
-        self.assertIsNone(get_pr_number())
+        mock_repo = MagicMock()
+        self.assertIsNone(get_pr_number(mock_repo))
 
     @patch.dict(os.environ, {"GITHUB_EVENT_NAME": "push"})
     def test_get_pr_number_not_pull_request(self):
-        self.assertIsNone(get_pr_number())
+        mock_repo = MagicMock()
+        self.assertIsNone(get_pr_number(mock_repo))
 
     @patch.dict(os.environ, {"GITHUB_EVENT_NAME": "pull_request"})
     def test_get_pr_number_no_event_path(self):
-        self.assertIsNone(get_pr_number())
+        mock_repo = MagicMock()
+        self.assertIsNone(get_pr_number(mock_repo))
 
     @patch.dict(
         os.environ,
@@ -71,7 +76,8 @@ class TestGetPRNumber(unittest.TestCase):
     )
     @patch("builtins.open", side_effect=FileNotFoundError)
     def test_get_pr_number_file_not_found(self, mock_file):
-        self.assertIsNone(get_pr_number())
+        mock_repo = MagicMock()
+        self.assertIsNone(get_pr_number(mock_repo))
 
     @patch.dict(
         os.environ,
@@ -86,7 +92,8 @@ class TestGetPRNumber(unittest.TestCase):
         read_data='{"pull_request": {"number": "123"}}',
     )
     def test_get_pr_number_string_number(self, mock_file):
-        self.assertEqual(get_pr_number(), "123")
+        mock_repo = MagicMock()
+        self.assertEqual(get_pr_number(mock_repo), "123")
 
     @patch.dict(
         os.environ,
@@ -97,7 +104,8 @@ class TestGetPRNumber(unittest.TestCase):
     )
     @patch("builtins.open", new_callable=mock_open, read_data="invalid json")
     def test_get_pr_number_invalid_json(self, mock_file):
-        self.assertIsNone(get_pr_number())
+        mock_repo = MagicMock()
+        self.assertIsNone(get_pr_number(mock_repo))
 
 
 class TestCreateOrUpdatePRComment(unittest.TestCase):
@@ -194,7 +202,6 @@ class TestGetThresholdsFromEnv(unittest.TestCase):
 
 
 class TestGetGithubRepo(unittest.TestCase):
-
     @patch.dict(os.environ, {"GITHUB_REPOSITORY": "test_org/test_repo"})
     @patch("check_alerts.Github")
     def test_get_github_repo_success(self, mock_github):
@@ -209,14 +216,11 @@ class TestGetGithubRepo(unittest.TestCase):
     @patch("check_alerts.os.getenv")
     @patch("check_alerts.sys.exit")
     def test_get_github_repo_no_repo_name(self, mock_exit, mock_getenv):
-        # Arrange
         mock_getenv.return_value = None
         mock_github = MagicMock()
 
-        # Act
         get_github_repo(mock_github)
 
-        # Assert
         mock_exit.assert_called_once_with(1)
 
     @patch.dict(os.environ, {"GITHUB_REPOSITORY": "test_org/test_repo"})
