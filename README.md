@@ -77,7 +77,44 @@ make config
 
 ## Usage
 
-After a successful installation, provide an informative example of how this project can be used. Additional code snippets, screenshots and demos work well in this space. You may also link to the other documentation resources, e.g. the [User Guide](./docs/user-guide.md) to demonstrate more use cases and to show more features.
+```yaml
+name: Check Dependabot Alerts
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Daily check
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  security-events: read
+  contents: read
+  pull-requests: write  # Required for PR comments
+
+jobs:
+  check-alerts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: your-username/dependabot-alert-checker@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          critical-threshold: 3
+          high-threshold: 5
+          medium-threshold: 14
+          low-threshold: 30
+          report-mode: false
+```
+
+## Inputs
+
+| Input | Description | Required | Default |
+|-------|-------------|----------|---------|
+| `github-app-id` | Installation ID for the GitHub app with the necessary permissions | Yes | N/A |
+| `github-app-private-key` | Private Key for the GitHub app - note this *must* be stored as a secret | Yes | N/A |
+| `critical-threshold` | Maximum age in days for Critical severity alerts | No | 3 |
+| `high-threshold` | Maximum age in days for High severity alerts | No | 5 |
+| `medium-threshold` | Maximum age in days for Medium severity alerts | No | 14 |
+| `low-threshold` | Maximum age in days for Low severity alerts | No | 30 |
+| `report-mode` | Run in report-only mode without failing | No | false |
 
 ### Testing
 

@@ -23,8 +23,11 @@ inputs:
     description: 'Mode to run the action in'
     required: false
     default: 'false'
-  github-token:
-    description: 'GitHub token with security alerts read permission'
+  github-app-id:
+    description: 'The installation id for the Dependabot policy enforcer app'
+    required: true
+  github-app-private-key:
+    description: 'The private key for the Dependabot policy enforcer app'
     required: true
 
 runs:
@@ -49,5 +52,6 @@ runs:
         INPUT_MEDIUM_THRESHOLD: ${{ inputs.medium-threshold }}
         INPUT_LOW_THRESHOLD: ${{ inputs.low-threshold }}
         INPUT_REPORT_MODE: ${{ inputs.report-mode }}
-        GITHUB_TOKEN: ${{ inputs.github-token }}
+        GITHUB_APP_ID: ${{ inputs.github-app-id }}
+        PRIVATE_KEY: ${{ inputs.github-app-private-key }}
       run: python ${{ github.action_path }}/check_alerts.py
