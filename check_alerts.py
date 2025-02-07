@@ -2,22 +2,24 @@
 import os
 import json
 from datetime import datetime, timezone
-from github import Github, GithubException
+from github import Auth, Github, GithubException
 import sys
 
+
 def get_pr_number():
-    if os.getenv('GITHUB_EVENT_NAME') == 'pull_request':
+    if os.getenv("GITHUB_EVENT_NAME") == "pull_request":
         try:
-            event_path = os.getenv('GITHUB_EVENT_PATH')
+            event_path = os.getenv("GITHUB_EVENT_PATH")
             if event_path:
                 with open(event_path) as f:
                     event = json.load(f)
-                    pr_number = event.get('pull_request', {}).get('number')
+                    pr_number = event.get("pull_request", {}).get("number")
                     if pr_number:
                         return pr_number
         except Exception as e:
             print(f"Error reading event file: {e}")
     return None
+
 
 def create_or_update_pr_comment(repo, pr_number, body):
     try:
@@ -44,21 +46,26 @@ def get_alert_age(created_at):
     age = now - created_at
     return age.days
 
+
 def get_thresholds_from_env():
     return {
-        'CRITICAL': int(os.getenv('INPUT_CRITICAL_THRESHOLD', '3')),
-        'HIGH': int(os.getenv('INPUT_HIGH_THRESHOLD', '5')),
-        'MEDIUM': int(os.getenv('INPUT_MEDIUM_THRESHOLD', '14')),
-        'LOW': int(os.getenv('INPUT_LOW_THRESHOLD', '30'))
+        "CRITICAL": int(os.getenv("INPUT_CRITICAL_THRESHOLD", "3")),
+        "HIGH": int(os.getenv("INPUT_HIGH_THRESHOLD", "5")),
+        "MEDIUM": int(os.getenv("INPUT_MEDIUM_THRESHOLD", "14")),
+        "LOW": int(os.getenv("INPUT_LOW_THRESHOLD", "30")),
     }
 
-def get_github_repo(token):
-    g = Github(token)
-    repo_name = os.getenv('GITHUB_REPOSITORY')
+
+def get_github_repo(app_id, private_key, installation_id):
+    auth = Auth.AppAuth(app_id, private_key).get_installation_auth(installation_id)
+    g = Github(auth=auth)
+
+    repo_name = os.getenv("GITHUB_REPOSITORY")
     print(f"Checking alerts for repository: {repo_name}")
     repo = g.get_repo(repo_name)
     print(f"Repository: {repo.full_name}")
     return repo
+
 
 def get_dependabot_alerts(repo):
     try:
@@ -75,6 +82,7 @@ def get_dependabot_alerts(repo):
             sys.exit(1)
         raise
 
+
 def analyze_alerts(alerts, ALERT_THRESHOLDS):
     violations = []
     all_alerts = []
@@ -87,13 +95,13 @@ def analyze_alerts(alerts, ALERT_THRESHOLDS):
         threshold = ALERT_THRESHOLDS.get(severity)
 
         alert_info = {
-            'package': alert.dependency.package.name,
-            'severity': severity,
-            'age_days': age,
-            'threshold_days': threshold,
-            'url': alert.html_url,
-            'title': alert.security_advisory.summary,
-            'created_at': alert.created_at.strftime('%Y-%m-%d %H:%M:%S UTC')
+            "package": alert.dependency.package.name,
+            "severity": severity,
+            "age_days": age,
+            "threshold_days": threshold,
+            "url": alert.html_url,
+            "title": alert.security_advisory.summary,
+            "created_at": alert.created_at.strftime("%Y-%m-%d %H:%M:%S UTC"),
         }
 
         all_alerts.append(alert_info)
@@ -101,6 +109,7 @@ def analyze_alerts(alerts, ALERT_THRESHOLDS):
         if age > threshold:
             violations.append(alert_info)
     return violations, all_alerts
+
 
 def format_alert_output(violations, all_alerts, REPORT_MODE):
     output = []
@@ -113,17 +122,26 @@ def format_alert_output(violations, all_alerts, REPORT_MODE):
         for violation in violations:
             output.append(f"\n\n#### ")
             output.append(f"- **Severity:** {violation['severity']}")
-            output.append(f"- **Age:** {violation['age_days']} days (Threshold: {violation['threshold_days']} days)")
+            output.append(
+                f"- **Age:** {violation['age_days']} days (Threshold: {violation['threshold_days']} days)"
+            )
             output.append(f"- **Created:** {violation['created_at']}")
             output.append(f"- **URL:** {violation['url']}")
 
         if REPORT_MODE:
-            output.append("\n:warning: Alerts exceed age thresholds but running in report mode")
+            output.append(
+                "\n:warning: Alerts exceed age thresholds but running in report mode"
+            )
         else:
-            output.append("\n:no_entry: Action failed due to alerts exceeding age thresholds")
+            output.append(
+                "\n:no_entry: Action failed due to alerts exceeding age thresholds"
+            )
     else:
-        output.append("\n:white_check_mark: All alerts are within acceptable age thresholds")
+        output.append(
+            "\n:white_check_mark: All alerts are within acceptable age thresholds"
+        )
     return "\n".join(output)
+
 
 def post_pr_comment(repo, pr_number, output):
     if pr_number:
@@ -137,19 +155,33 @@ def post_pr_comment(repo, pr_number, output):
 
 
 def main_check_alerts():
-    token = os.getenv('GITHUB_TOKEN')
-    if not token:
-        print("Error: GITHUB_TOKEN not found")
+    private_key = os.getenv("PRIVATE_KEY").replace("\\n", "\n")
+    app_id = os.getenv("GITHUB_APP_ID")
+    installation_id = os.getenv("GITHUB_INSTALLATION_ID")
+
+    missing_vars = []
+
+    if not private_key:
+        missing_vars.append("PRIVATE_KEY")
+
+    if not app_id:
+        missing_vars.append("GITHUB_APP_ID")
+
+    if not installation_id:
+        missing_vars.append("GITHUB_INSTALLATION_ID")
+
+    if missing_vars:
+        for var in missing_vars:
+            print(f"Error: {var} not found")
         sys.exit(1)
 
-    repo = get_github_repo(token)
+    repo = get_github_repo(app_id, private_key, installation_id)
     ALERT_THRESHOLDS = get_thresholds_from_env()
-    REPORT_MODE = os.getenv('INPUT_REPORT_MODE', 'false').lower() == 'true'
+    REPORT_MODE = os.getenv("INPUT_REPORT_MODE", "false").lower() == "true"
 
     alerts = get_dependabot_alerts(repo)
     violations, all_alerts = analyze_alerts(alerts, ALERT_THRESHOLDS)
     output = format_alert_output(violations, all_alerts, REPORT_MODE)
-    print(output)
 
     pr_number = get_pr_number()
     post_pr_comment(repo, pr_number, output)
@@ -157,6 +189,7 @@ def main_check_alerts():
     if violations and not REPORT_MODE:
         sys.exit(1)
     sys.exit(0)
+
 
 if __name__ == "__main__":
     main_check_alerts()
