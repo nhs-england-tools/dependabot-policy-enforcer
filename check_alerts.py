@@ -7,7 +7,9 @@ import sys
 
 
 def get_pr_number():
-    if os.getenv("GITHUB_EVENT_NAME") == "pull_request":
+    event_name = os.getenv("GITHUB_EVENT_NAME")
+    print(f"Event name: {event_name}")
+    if event_name == "pull_request":
         print("This is a Pull Request")
         try:
             event_path = os.getenv("GITHUB_EVENT_PATH")
