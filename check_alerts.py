@@ -160,14 +160,10 @@ def post_pr_comment(repo, pr_number, output):
 
 def revoke_installation_token(github: Github):
     requester = github.requester
-    _, response = requester.requestJsonAndCheck("DELETE", "/installation/token")
-
-    json_response = json.loads(response)
-
-    print(f"Revoke endpoint response: {json_response}")
-
-    if json_response["Status"] != 204:
-        print("Failed to revoke installation token")
+    try:
+        requester.requestJsonAndCheck("DELETE", "/installation/token")
+    except GithubException as e:
+        print(f"Error revoking installation token: {e}")
         sys.exit(1)
 
 

@@ -229,8 +229,8 @@ class TestGetGithubRepo(unittest.TestCase):
 
 
 class TestRevokeInstallationToken(unittest.TestCase):
-    @patch("check_alerts.Github")
-    def test_revoke_installation_token(self, mock_github):
+    def test_revoke_installation_token(self):
+        mock_github = MagicMock()
         mock_requester = MagicMock()
         mock_github.requester = mock_requester
         mock_requester.requestJsonAndCheck.return_value = (
@@ -243,3 +243,17 @@ class TestRevokeInstallationToken(unittest.TestCase):
         mock_requester.requestJsonAndCheck.assert_called_once_with(
             "DELETE", "/installation/token"
         )
+
+    @patch("check_alerts.sys.exit")
+    def test_revoke_installation_token_failure(self, mock_exit):
+        mock_github = MagicMock()
+        mock_requester = MagicMock()
+        mock_github.requester = mock_requester
+        mock_requester.requestJsonAndCheck.side_effect = GithubException("Error")
+
+        revoke_installation_token(mock_github)
+
+        mock_requester.requestJsonAndCheck.assert_called_once_with(
+            "DELETE", "/installation/token"
+        )
+        mock_exit.assert_called_once_with(1)
