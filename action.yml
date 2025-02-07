@@ -24,7 +24,10 @@ inputs:
     required: false
     default: 'false'
   github-app-id:
-    description: 'The installation id for the Dependabot policy enforcer app'
+    description: 'The app id for the Dependabot policy enforcer app'
+    required: true
+  github-installation-id:
+    description: 'The installation id for the Dependabot policy enforcer app installed at the organisation'
     required: true
   github-app-private-key:
     description: 'The private key for the Dependabot policy enforcer app'
@@ -53,5 +56,6 @@ runs:
         INPUT_LOW_THRESHOLD: ${{ inputs.low-threshold }}
         INPUT_REPORT_MODE: ${{ inputs.report-mode }}
         GITHUB_APP_ID: ${{ inputs.github-app-id }}
+        GITHUB_INSTALLATION_ID: ${{ inputs.github-installation-id }}
         PRIVATE_KEY: ${{ inputs.github-app-private-key }}
       run: python ${{ github.action_path }}/check_alerts.py

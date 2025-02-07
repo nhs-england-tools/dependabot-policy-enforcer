@@ -3,16 +3,12 @@
 [![CI/CD Pull Request](https://github.com/nhs-england-tools/dependabot-policy-enforcer/actions/workflows/cicd-1-pull-request.yaml/badge.svg)](https://github.com/nhs-england-tools/dependabot-policy-enforcer/actions/workflows/cicd-1-pull-request.yaml)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=nhsdigital_nhs-england-tools_dependabot-policy-enforcer&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=nhsdigital_nhs-england-tools_dependabot-policy-enforcer)
 
-Start with an overview or a brief description of what the project is about and what it does. For example -
+A GitHub Action that enforces age-based policies on Dependabot security alerts. It helps teams maintain security by ensuring that vulnerabilities are addressed within specified timeframes based on their severity.
 
-Welcome to our repository template designed to streamline your project setup! This robust template provides a reliable starting point for your new projects, covering an essential tech stack and encouraging best practices in documenting.
-
-This repository template aims to foster a user-friendly development environment by ensuring that every included file is concise and adequately self-documented. By adhering to this standard, we can promote increased clarity and maintainability throughout your project's lifecycle. Bundled within this template are resources that pave the way for seamless repository creation. Currently supported technologies are:
-
-- Terraform
-- Docker
-
-Make use of this repository template to expedite your project setup and enhance your productivity right from the get-go. Enjoy the advantage of having a well-structured, self-documented project that reduces overhead and increases focus on what truly matters - coding!
+- Checks open Dependabot alerts against configurable age thresholds
+- Supports different thresholds for Critical, High, Medium, and Low severity alerts
+- Provides detailed reports in PR comments and workflow logs
+- Optional report-only mode for monitoring without failing builds
 
 ## Table of Contents
 
@@ -32,8 +28,6 @@ Make use of this repository template to expedite your project setup and enhance 
 
 ## Setup
 
-By including preferably a one-liner or if necessary a set of clear CLI instructions we improve user experience. This should be a frictionless installation process that works on various operating systems (macOS, Linux, Windows WSL) and handles all the dependencies.
-
 Clone the repository
 
 ```shell
@@ -45,27 +39,7 @@ cd nhs-england-tools/repository-template
 
 The following software packages, or their equivalents, are expected to be installed and configured:
 
-- [Docker](https://www.docker.com/) container runtime or a compatible tool, e.g. [Podman](https://podman.io/),
-- [asdf](https://asdf-vm.com/) version manager,
-- [GNU make](https://www.gnu.org/software/make/) 3.82 or later,
-
-> [!NOTE]<br>
-> The version of GNU make available by default on macOS is earlier than 3.82. You will need to upgrade it or certain `make` tasks will fail. On macOS, you will need [Homebrew](https://brew.sh/) installed, then to install `make`, like so:
->
-> ```shell
-> brew install make
-> ```
->
-> You will then see instructions to fix your [`$PATH`](https://github.com/nhs-england-tools/dotfiles/blob/main/dot_path.tmpl) variable to make the newly installed version available. If you are using [dotfiles](https://github.com/nhs-england-tools/dotfiles), this is all done for you.
-
-- [GNU sed](https://www.gnu.org/software/sed/) and [GNU grep](https://www.gnu.org/software/grep/) are required for the scripted command-line output processing,
-- [GNU coreutils](https://www.gnu.org/software/coreutils/) and [GNU binutils](https://www.gnu.org/software/binutils/) may be required to build dependencies like Python, which may need to be compiled during installation,
-
-> [!NOTE]<br>
-> For macOS users, installation of the GNU toolchain has been scripted and automated as part of the `dotfiles` project. Please see this [script](https://github.com/nhs-england-tools/dotfiles/blob/main/assets/20-install-base-packages.macos.sh) for details.
-
-- [Python](https://www.python.org/) required to run Git hooks,
-- [`jq`](https://jqlang.github.io/jq/) a lightweight and flexible command-line JSON processor.
+- [Python](https://www.python.org/downloads/release/python-3120/) 3.12 or later,
 
 ### Configuration
 
@@ -96,7 +70,9 @@ jobs:
     steps:
       - uses: your-username/dependabot-alert-checker@v1
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-app-id: ${{ secrets.GITHUB_APP_ID }}
+          github-installation-id: ${{ secrets.GITHUB_INSTALLATION_ID }}
+          github-app-private-key: ${{ secrets.GITHUB_PRIVATE_KEY }}
           critical-threshold: 3
           high-threshold: 5
           medium-threshold: 14
@@ -104,11 +80,19 @@ jobs:
           report-mode: false
 ```
 
+### Permissions
+
+This action requires:
+- `security-events: read` to access Dependabot alerts
+- `contents: read` to access repository content
+- `pull-requests: write` (optional) to post comments on PRs
+
 ## Inputs
 
 | Input | Description | Required | Default |
 |-------|-------------|----------|---------|
-| `github-app-id` | Installation ID for the GitHub app with the necessary permissions | Yes | N/A |
+| `github-app-id` | App ID for the GitHub app with the necessary permissions | Yes | N/A |
+| `github-installation-id` | Installation ID for the GitHub app at the required organisation | Yes | N/A |
 | `github-app-private-key` | Private Key for the GitHub app - note this *must* be stored as a secret | Yes | N/A |
 | `critical-threshold` | Maximum age in days for Critical severity alerts | No | 3 |
 | `high-threshold` | Maximum age in days for High severity alerts | No | 5 |
