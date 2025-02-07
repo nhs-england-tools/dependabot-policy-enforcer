@@ -192,7 +192,7 @@ def main_check_alerts():
             print(f"Error: {var} not found")
         sys.exit(1)
 
-    auth = Auth.AppAuth(app_id, private_key).get_installation_auth(installation_id)
+    auth = Auth.AppAuth(app_id, private_key).get_installation_auth(int(installation_id))
     github = Github(auth=auth)
 
     repo = get_github_repo(github)

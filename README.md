@@ -46,10 +46,10 @@ The GitHub action needs to run as a GitHub App to have the required permissions 
 From the context of the organisation navigate to `Settings`. In the Organization settings navigate to `Developer settings` and select `GitHub Apps`. Press the `New GitHub App` button. Complete the Register new GitHub App page with the following values:
 
 `GitHub App name`: `dependabot-policy-enforcer`
-`Homepage URL`: The url of the repository
-`Webhook`: uncheck the `Active` checkbox
+`Homepage URL`: The URL of the repository
+`Webhook`: untick the `Active` checkbox
 Permissions
-`Repository permissions`: 
+`Repository permissions`:
 
 - `Dependabot alerts: Read-only` to access Dependabot alerts
 - `Metadata: Read-only` default permission
@@ -70,7 +70,6 @@ From the app settings screen press the `Generate a private key` button. This wil
 From the app settings screen select `Install App` link. You will be prompted to select an account to install the app on. Locate the organization you want to install to and press the `Install` button next to this organization.
 
 Select to install the app at `All repositories` press the `Install` button. The installation ID is included in the URL after `/settings/installations/` this needs adding to the Secrets for the target repository or organizations.
-
 
 ### Configuration
 
