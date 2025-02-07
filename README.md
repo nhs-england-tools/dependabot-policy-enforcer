@@ -47,7 +47,7 @@ From the context of the organisation navigate to `Settings`. In the Organization
 
 `GitHub App name`: `dependabot-policy-enforcer`
 `Homepage URL`: The URL of the repository
-`Webhook`: untick the `Active` checkbox
+`Webhook`: deselect the `Active` checkbox
 Permissions
 `Repository permissions`:
 
