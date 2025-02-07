@@ -5,54 +5,103 @@ from unittest.mock import patch, mock_open, Mock
 from github import GithubException
 from datetime import datetime, timezone, timedelta
 
-from check_alerts import get_pr_number, create_or_update_pr_comment, get_alert_age, get_thresholds_from_env, get_github_repo
+from check_alerts import (
+    get_pr_number,
+    create_or_update_pr_comment,
+    get_alert_age,
+    get_thresholds_from_env,
+    get_github_repo,
+)
+
 
 class TestGetPRNumber(unittest.TestCase):
 
-    @patch.dict(os.environ, {'GITHUB_EVENT_NAME': 'pull_request', 'GITHUB_EVENT_PATH': '/path/to/event.json'})
-    @patch('builtins.open', new_callable=mock_open, read_data='{"pull_request": {"number": 123}}')
+    @patch.dict(
+        os.environ,
+        {
+            "GITHUB_EVENT_NAME": "pull_request",
+            "GITHUB_EVENT_PATH": "/path/to/event.json",
+        },
+    )
+    @patch(
+        "builtins.open",
+        new_callable=mock_open,
+        read_data='{"pull_request": {"number": 123}}',
+    )
     def test_get_pr_number_success(self, mock_file):
         self.assertEqual(get_pr_number(), 123)
 
-    @patch.dict(os.environ, {'GITHUB_EVENT_NAME': 'pull_request', 'GITHUB_EVENT_PATH': '/path/to/event.json'})
-    @patch('builtins.open', new_callable=mock_open, read_data='{}')
+    @patch.dict(
+        os.environ,
+        {
+            "GITHUB_EVENT_NAME": "pull_request",
+            "GITHUB_EVENT_PATH": "/path/to/event.json",
+        },
+    )
+    @patch("builtins.open", new_callable=mock_open, read_data="{}")
     def test_get_pr_number_no_pull_request_key(self, mock_file):
         self.assertIsNone(get_pr_number())
 
-    @patch.dict(os.environ, {'GITHUB_EVENT_NAME': 'pull_request', 'GITHUB_EVENT_PATH': '/path/to/event.json'})
-    @patch('builtins.open', new_callable=mock_open, read_data='{"pull_request": {}}')
+    @patch.dict(
+        os.environ,
+        {
+            "GITHUB_EVENT_NAME": "pull_request",
+            "GITHUB_EVENT_PATH": "/path/to/event.json",
+        },
+    )
+    @patch("builtins.open", new_callable=mock_open, read_data='{"pull_request": {}}')
     def test_get_pr_number_no_number_key(self, mock_file):
         self.assertIsNone(get_pr_number())
 
-    @patch.dict(os.environ, {'GITHUB_EVENT_NAME': 'push'})
+    @patch.dict(os.environ, {"GITHUB_EVENT_NAME": "push"})
     def test_get_pr_number_not_pull_request(self):
         self.assertIsNone(get_pr_number())
 
-    @patch.dict(os.environ, {'GITHUB_EVENT_NAME': 'pull_request'})
+    @patch.dict(os.environ, {"GITHUB_EVENT_NAME": "pull_request"})
     def test_get_pr_number_no_event_path(self):
         self.assertIsNone(get_pr_number())
 
-    @patch.dict(os.environ, {'GITHUB_EVENT_NAME': 'pull_request', 'GITHUB_EVENT_PATH': '/path/to/event.json'})
-    @patch('builtins.open', side_effect=FileNotFoundError)
+    @patch.dict(
+        os.environ,
+        {
+            "GITHUB_EVENT_NAME": "pull_request",
+            "GITHUB_EVENT_PATH": "/path/to/event.json",
+        },
+    )
+    @patch("builtins.open", side_effect=FileNotFoundError)
     def test_get_pr_number_file_not_found(self, mock_file):
         self.assertIsNone(get_pr_number())
 
-
-    @patch.dict(os.environ, {'GITHUB_EVENT_NAME': 'pull_request', 'GITHUB_EVENT_PATH': '/path/to/event.json'})
-    @patch('builtins.open', new_callable=mock_open, read_data='{"pull_request": {"number": "123"}}')
+    @patch.dict(
+        os.environ,
+        {
+            "GITHUB_EVENT_NAME": "pull_request",
+            "GITHUB_EVENT_PATH": "/path/to/event.json",
+        },
+    )
+    @patch(
+        "builtins.open",
+        new_callable=mock_open,
+        read_data='{"pull_request": {"number": "123"}}',
+    )
     def test_get_pr_number_string_number(self, mock_file):
         self.assertEqual(get_pr_number(), "123")
 
-    @patch.dict(os.environ, {'GITHUB_EVENT_NAME': 'pull_request', 'GITHUB_EVENT_PATH': '/path/to/event.json'})
-    @patch('builtins.open', new_callable=mock_open, read_data='invalid json')
+    @patch.dict(
+        os.environ,
+        {
+            "GITHUB_EVENT_NAME": "pull_request",
+            "GITHUB_EVENT_PATH": "/path/to/event.json",
+        },
+    )
+    @patch("builtins.open", new_callable=mock_open, read_data="invalid json")
     def test_get_pr_number_invalid_json(self, mock_file):
         self.assertIsNone(get_pr_number())
 
 
-
 class TestCreateOrUpdatePRComment(unittest.TestCase):
 
-    @patch('check_alerts.Github')
+    @patch("check_alerts.Github")
     def test_update_existing_comment(self, mock_github):
         mock_repo = Mock()
         mock_pr = Mock()
@@ -62,13 +111,12 @@ class TestCreateOrUpdatePRComment(unittest.TestCase):
         mock_repo.get_pull.return_value = mock_pr
         mock_github.return_value.get_repo.return_value = mock_repo
 
-
         create_or_update_pr_comment(mock_repo, 1, "New Comment Body")
 
         mock_comment.edit.assert_called_once_with("New Comment Body")
         mock_pr.create_issue_comment.assert_not_called()
 
-    @patch('check_alerts.Github')
+    @patch("check_alerts.Github")
     def test_create_new_comment(self, mock_github):
         mock_repo = Mock()
         mock_pr = Mock()
@@ -80,8 +128,7 @@ class TestCreateOrUpdatePRComment(unittest.TestCase):
 
         mock_pr.create_issue_comment.assert_called_once_with("New Comment Body")
 
-
-    @patch('check_alerts.Github')
+    @patch("check_alerts.Github")
     def test_github_exception(self, mock_github):
         mock_repo = Mock()
         mock_repo.get_pull.side_effect = GithubException(403, "Error")
@@ -91,7 +138,7 @@ class TestCreateOrUpdatePRComment(unittest.TestCase):
 
         # If we reached here the function handled the GithubException correctly by not raising it again
 
-    @patch('check_alerts.Github')
+    @patch("check_alerts.Github")
     def test_other_exception(self, mock_github):
         mock_repo = Mock()
         mock_repo.get_pull.side_effect = Exception("Other Error")
@@ -118,58 +165,59 @@ class TestGetAlertAge(unittest.TestCase):
         created_at = datetime.now(timezone.utc) + timedelta(days=1)
         self.assertEqual(get_alert_age(created_at), -1)
 
+
 class TestGetThresholdsFromEnv(unittest.TestCase):
 
-    @patch.dict(os.environ, {'INPUT_CRITICAL_THRESHOLD': '1', 'INPUT_HIGH_THRESHOLD': '2', 'INPUT_MEDIUM_THRESHOLD': '7', 'INPUT_LOW_THRESHOLD': '15'})
+    @patch.dict(
+        os.environ,
+        {
+            "INPUT_CRITICAL_THRESHOLD": "1",
+            "INPUT_HIGH_THRESHOLD": "2",
+            "INPUT_MEDIUM_THRESHOLD": "7",
+            "INPUT_LOW_THRESHOLD": "15",
+        },
+    )
     def test_get_thresholds_from_env_set(self):
-        expected_thresholds = {
-            'CRITICAL': 1,
-            'HIGH': 2,
-            'MEDIUM': 7,
-            'LOW': 15
-        }
+        expected_thresholds = {"CRITICAL": 1, "HIGH": 2, "MEDIUM": 7, "LOW": 15}
         self.assertEqual(get_thresholds_from_env(), expected_thresholds)
 
     @patch.dict(os.environ, {})
     def test_get_thresholds_from_env_default(self):
-        expected_thresholds = {
-            'CRITICAL': 3,
-            'HIGH': 5,
-            'MEDIUM': 14,
-            'LOW': 30
-        }
+        expected_thresholds = {"CRITICAL": 3, "HIGH": 5, "MEDIUM": 14, "LOW": 30}
         self.assertEqual(get_thresholds_from_env(), expected_thresholds)
 
-
-    @patch.dict(os.environ, {'INPUT_CRITICAL_THRESHOLD': 'invalid'})
+    @patch.dict(os.environ, {"INPUT_CRITICAL_THRESHOLD": "invalid"})
     def test_get_thresholds_from_env_invalid_input(self):
         with self.assertRaises(ValueError):
             get_thresholds_from_env()
 
+
 class TestGetGithubRepo(unittest.TestCase):
 
-    @patch.dict(os.environ, {'GITHUB_REPOSITORY': 'test_org/test_repo'})
-    @patch('check_alerts.Github')
-    def test_get_github_repo_success(self, mock_github):
+    @patch.dict(os.environ, {"GITHUB_REPOSITORY": "test_org/test_repo"})
+    @patch("check_alerts.Auth")
+    @patch("check_alerts.Github")
+    def test_get_github_repo_success(self, mock_github, mock_auth):
         mock_repo = Mock()
         mock_repo.full_name = "test_org/test_repo"
         mock_github.return_value.get_repo.return_value = mock_repo
 
-        repo = get_github_repo('test_token')
+        repo = get_github_repo("app_id", "private_key", "installation_id")
 
         self.assertEqual(repo.full_name, "test_org/test_repo")
-
 
     def test_get_github_repo_no_repo_name(self):
         with patch.dict(os.environ, clear=True):
             with self.assertRaises(AssertionError):
-                get_github_repo('test_token')
+                get_github_repo("app_id", "private_key", "installation_id")
 
-
-    @patch.dict(os.environ, {'GITHUB_REPOSITORY': 'test_org/test_repo'})
-    @patch('check_alerts.Github')
-    def test_get_github_repo_github_exception(self, mock_github):
-        mock_github.return_value.get_repo.side_effect = GithubException(404, "Repo not found")
+    @patch.dict(os.environ, {"GITHUB_REPOSITORY": "test_org/test_repo"})
+    @patch("check_alerts.Auth")
+    @patch("check_alerts.Github")
+    def test_get_github_repo_github_exception(self, mock_github, mock_auth):
+        mock_github.return_value.get_repo.side_effect = GithubException(
+            404, "Repo not found"
+        )
 
         with self.assertRaises(GithubException):
-            get_github_repo('test_token')
+            get_github_repo("app_id", "private_key", "installation_id")
