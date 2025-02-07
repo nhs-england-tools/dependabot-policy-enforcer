@@ -83,6 +83,7 @@ jobs:
 ### Permissions
 
 This action requires:
+
 - `security-events: read` to access Dependabot alerts
 - `contents: read` to access repository content
 - `pull-requests: write` (optional) to post comments on PRs
