@@ -159,7 +159,7 @@ def post_pr_comment(repo, pr_number, output):
 
 
 def revoke_installation_token(github: Github):
-    requester = github.requester()
+    requester = github.requester
     _, response = requester.requestJsonAndCheck("DELETE", "/installation/token")
 
     json_response = json.loads(response)

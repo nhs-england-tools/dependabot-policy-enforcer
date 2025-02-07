@@ -231,9 +231,8 @@ class TestGetGithubRepo(unittest.TestCase):
 class TestRevokeInstallationToken(unittest.TestCase):
     @patch("check_alerts.Github")
     def test_revoke_installation_token(self, mock_github):
-        mock_github = mock_github.return_value
         mock_requester = MagicMock()
-        mock_github.requester.return_value = mock_requester
+        mock_github.requester = mock_requester
         mock_requester.requestJsonAndCheck.return_value = (
             "headers",
             json.dumps({"Status": 204}),
