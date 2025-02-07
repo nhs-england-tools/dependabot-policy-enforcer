@@ -2,13 +2,14 @@
 import os
 import json
 from datetime import datetime, timezone
-from github import Auth, Github, GithubException
+from github import Auth, Github, GithubException, Repository
 import sys
 
 
-def get_pr_number():
+def get_pr_number(repo: Repository):
     event_name = os.getenv("GITHUB_EVENT_NAME")
     print(f"Event name: {event_name}")
+
     if event_name == "pull_request":
         print("This is a Pull Request")
         try:
@@ -21,6 +22,20 @@ def get_pr_number():
                         return pr_number
         except Exception as e:
             print(f"Error reading event file: {e}")
+
+    elif event_name == "push":
+        print("This is a Push event")
+        ref = event.get("ref")
+        if ref and ref.startswith("refs/heads/"):
+            branch_name = ref[len("refs/heads/") :]
+            print(f"Branch name: {branch_name}")
+            print(f"Owner: {repo.owner.login}")
+            pulls = repo.get_pulls(
+                state="open", head=f"{repo.owner.login}:{branch_name}"
+            )
+            for pr in pulls:
+                return pr.number
+
     print("Not a pull request")
     return None
 
@@ -208,7 +223,7 @@ def main_check_alerts():
     violations, all_alerts = analyze_alerts(alerts, ALERT_THRESHOLDS)
     output = format_alert_output(violations, all_alerts, REPORT_MODE)
 
-    pr_number = get_pr_number()
+    pr_number = get_pr_number(repo)
     post_pr_comment(repo, pr_number, output)
 
     revoke_installation_token(github)
