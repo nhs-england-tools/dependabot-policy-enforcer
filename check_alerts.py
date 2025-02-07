@@ -8,6 +8,7 @@ import sys
 
 def get_pr_number():
     if os.getenv("GITHUB_EVENT_NAME") == "pull_request":
+        print("This is a Pull Request")
         try:
             event_path = os.getenv("GITHUB_EVENT_PATH")
             if event_path:
@@ -18,6 +19,7 @@ def get_pr_number():
                         return pr_number
         except Exception as e:
             print(f"Error reading event file: {e}")
+    print("Not a pull request")
     return None
 
 
@@ -74,6 +76,7 @@ def get_github_repo(github: Github):
 def get_dependabot_alerts(repo):
     try:
         alerts = repo.get_dependabot_alerts()
+        print("returned alerts")
         return alerts
     except GithubException as e:
         print(f"Error: {e}")
@@ -84,6 +87,9 @@ def get_dependabot_alerts(repo):
             print("2. Workflow has 'security-events: read' permission")
             print("3. Dependabot alerts are enabled for this repository")
             sys.exit(1)
+        raise
+    except Exception as e:
+        print(f"Error: {e}")
         raise
 
 
@@ -159,9 +165,9 @@ def post_pr_comment(repo, pr_number, output):
 
 
 def revoke_installation_token(github: Github):
-    requester = github.requester
+    print("Completed: revoking token")
     try:
-        requester.requestJsonAndCheck("DELETE", "/installation/token")
+        github.requester.requestJsonAndCheck("DELETE", "/installation/token")
     except GithubException as e:
         print(f"Error revoking installation token: {e}")
         sys.exit(1)
