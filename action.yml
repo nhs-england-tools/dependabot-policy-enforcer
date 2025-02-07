@@ -55,7 +55,7 @@ runs:
         INPUT_MEDIUM_THRESHOLD: ${{ inputs.medium-threshold }}
         INPUT_LOW_THRESHOLD: ${{ inputs.low-threshold }}
         INPUT_REPORT_MODE: ${{ inputs.report-mode }}
-        GITHUB_APP_ID: ${{ inputs.github-app-id }}
-        GITHUB_INSTALLATION_ID: ${{ inputs.github-installation-id }}
+        APP_ID: ${{ inputs.github-app-id }}
+        INSTALLATION_ID: ${{ inputs.github-installation-id }}
         PRIVATE_KEY: ${{ inputs.github-app-private-key }}
       run: python ${{ github.action_path }}/check_alerts.py

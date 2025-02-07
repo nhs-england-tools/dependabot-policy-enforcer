@@ -41,6 +41,37 @@ The following software packages, or their equivalents, are expected to be instal
 
 - [Python](https://www.python.org/downloads/release/python-3120/) 3.12 or later,
 
+The GitHub action needs to run as a GitHub App to have the required permissions to report on Dependabot findings. To create the app:
+
+From the context of the organisation navigate to `Settings`. In the Organization settings navigate to `Developer settings` and select `GitHub Apps`. Press the `New GitHub App` button. Complete the Register new GitHub App page with the following values:
+
+`GitHub App name`: `dependabot-policy-enforcer`
+`Homepage URL`: The url of the repository
+`Webhook`: uncheck the `Active` checkbox
+Permissions
+`Repository permissions`: 
+
+- `Dependabot alerts: Read-only` to access Dependabot alerts
+- `Metadata: Read-only` default permission
+- `Pull requests: Read and Write` to add comments to PRs
+
+`Where can this GitHub App be installed?`: select `Any account`
+
+Press `Create GitHub App` button.
+
+Make a note of the App ID. This will need to be added as a secret to the target repository - or as an organisation level secret.
+
+#### Generate a private key
+
+From the app settings screen press the `Generate a private key` button. This will download a private key pem file to your local machine. This will need adding as a secret to the target repository. Copy the text including the `-----BEGIN RSA PRIVATE KEY-----` and `-----END RSA PRIVATE KEY-----` be aware that the pem file will include a blank line at the end - this should not be included into the secret.
+
+#### Install app
+
+From the app settings screen select `Install App` link. You will be prompted to select an account to install the app on. Locate the organization you want to install to and press the `Install` button next to this organization.
+
+Select to install the app at `All repositories` press the `Install` button. The installation ID is included in the URL after `/settings/installations/` this needs adding to the Secrets for the target repository or organizations.
+
+
 ### Configuration
 
 Installation and configuration of the toolchain dependencies
@@ -48,6 +79,53 @@ Installation and configuration of the toolchain dependencies
 ```shell
 make config
 ```
+
+### Local development
+
+#### Setting up a Python virtual environment
+
+To set up a Python virtual environment and install the dependencies listed in `requirements.txt`, follow these steps:
+
+1. Create a virtual environment:
+
+    ```shell
+    pip install --upgrade pip
+    python -m venv venv
+    ```
+
+2. Activate the virtual environment:
+
+    - On Windows:
+
+        ```shell
+        .\venv\Scripts\activate
+        ```
+
+    - On macOS and Linux:
+
+        ```shell
+        source venv/bin/activate
+        ```
+
+3. Install the dependencies:
+
+    ```shell
+    pip install -r requirements.txt
+    ```
+
+#### Running the tests
+
+To run the tests, follow these steps:
+
+1. Ensure the virtual environment is activated (see above).
+
+2. Run the tests using `unittest`:
+
+    ```shell
+    python -m unittest discover -s . -p "test_check_alerts.py"
+    ```
+
+This will execute the unit tests and display the results in the terminal.
 
 ## Usage
 
@@ -70,9 +148,9 @@ jobs:
     steps:
       - uses: your-username/dependabot-alert-checker@v1
         with:
-          github-app-id: ${{ secrets.GITHUB_APP_ID }}
-          github-installation-id: ${{ secrets.GITHUB_INSTALLATION_ID }}
-          github-app-private-key: ${{ secrets.GITHUB_PRIVATE_KEY }}
+          github-app-id: ${{ secrets.APP_ID }}
+          github-installation-id: ${{ secrets.INSTALLATION_ID }}
+          github-app-private-key: ${{ secrets.PRIVATE_KEY }}
           critical-threshold: 3
           high-threshold: 5
           medium-threshold: 14
@@ -87,6 +165,8 @@ This action requires:
 - `security-events: read` to access Dependabot alerts
 - `contents: read` to access repository content
 - `pull-requests: write` (optional) to post comments on PRs
+
+App permissions:
 
 - `Dependabot alerts: Read` to access Dependabot alerts
 - `Metadata: Read` default permission

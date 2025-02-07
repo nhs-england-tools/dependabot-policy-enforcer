@@ -173,8 +173,8 @@ def revoke_installation_token(github: Github):
 
 def main_check_alerts():
     private_key = os.getenv("PRIVATE_KEY").replace("\\n", "\n")
-    app_id = os.getenv("GITHUB_APP_ID")
-    installation_id = os.getenv("GITHUB_INSTALLATION_ID")
+    app_id = os.getenv("APP_ID")
+    installation_id = os.getenv("INSTALLATION_ID")
 
     missing_vars = []
 
@@ -182,10 +182,10 @@ def main_check_alerts():
         missing_vars.append("PRIVATE_KEY")
 
     if not app_id:
-        missing_vars.append("GITHUB_APP_ID")
+        missing_vars.append("APP_ID")
 
     if not installation_id:
-        missing_vars.append("GITHUB_INSTALLATION_ID")
+        missing_vars.append("INSTALLATION_ID")
 
     if missing_vars:
         for var in missing_vars:
