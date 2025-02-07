@@ -87,6 +87,10 @@ This action requires:
 - `contents: read` to access repository content
 - `pull-requests: write` (optional) to post comments on PRs
 
+- `Dependabot alerts: Read` to access Dependabot alerts
+- `Metadata: Read` default permission
+- `Pull requests: Read and Write` to add comments to PRs
+
 ## Inputs
 
 | Input | Description | Required | Default |
