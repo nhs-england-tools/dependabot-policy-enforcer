@@ -8,24 +8,27 @@ import sys
 
 def get_pr_number(repo: Repository):
     event_name = os.getenv("GITHUB_EVENT_NAME")
+    event_path = os.getenv("GITHUB_EVENT_PATH")
     print(f"Event name: {event_name}")
+    event = {}
+
+    if event_path:
+        with open(event_path) as f:
+            event = json.load(f)
 
     if event_name == "pull_request":
         print("This is a Pull Request")
         try:
-            event_path = os.getenv("GITHUB_EVENT_PATH")
-            if event_path:
-                with open(event_path) as f:
-                    event = json.load(f)
-                    pr_number = event.get("pull_request", {}).get("number")
-                    if pr_number:
-                        return pr_number
+            pr_number = event.get("pull_request", {}).get("number")
+            if pr_number:
+                return pr_number
         except Exception as e:
             print(f"Error reading event file: {e}")
 
     elif event_name == "push":
         print("This is a Push event")
         ref = event.get("ref")
+
         if ref and ref.startswith("refs/heads/"):
             branch_name = ref[len("refs/heads/") :]
             print(f"Branch name: {branch_name}")
