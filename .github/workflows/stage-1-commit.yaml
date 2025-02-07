@@ -138,6 +138,6 @@ jobs:
           medium-threshold: 14
           low-threshold: 30
           report-mode: false
-          github-app-id: ${{ secrets.GITHUB_APP_ID }}
-          github-installation-id: ${{ secrets.GITHUB_INSTALLATION_ID }}
-          github-app-private-key: ${{ secrets.GITHUB_PRIVATE_KEY }}
+          github-app-id: ${{ secrets.APP_ID }}
+          github-installation-id: ${{ secrets.INSTALLATION_ID }}
+          github-app-private-key: ${{ secrets.PRIVATE_KEY }}
