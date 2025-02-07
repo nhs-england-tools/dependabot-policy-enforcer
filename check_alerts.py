@@ -56,14 +56,18 @@ def get_thresholds_from_env():
     }
 
 
-def get_github_repo(app_id, private_key, installation_id):
-    auth = Auth.AppAuth(app_id, private_key).get_installation_auth(installation_id)
-    g = Github(auth=auth)
-
+def get_github_repo(github: Github):
     repo_name = os.getenv("GITHUB_REPOSITORY")
+
+    if not repo_name:
+        print("Error: GITHUB_REPOSITORY not found")
+        sys.exit(1)
+
     print(f"Checking alerts for repository: {repo_name}")
-    repo = g.get_repo(repo_name)
+
+    repo = github.get_repo(repo_name)
     print(f"Repository: {repo.full_name}")
+
     return repo
 
 
@@ -154,6 +158,19 @@ def post_pr_comment(repo, pr_number, output):
                 print("Please ensure workflow has 'pull-requests: write' permission")
 
 
+def revoke_installation_token(github: Github):
+    requester = github.requester()
+    _, response = requester.requestJsonAndCheck("DELETE", "/installation/token")
+
+    json_response = json.loads(response)
+
+    print(f"Revoke endpoint response: {json_response}")
+
+    if json_response["Status"] != 204:
+        print("Failed to revoke installation token")
+        sys.exit(1)
+
+
 def main_check_alerts():
     private_key = os.getenv("PRIVATE_KEY").replace("\\n", "\n")
     app_id = os.getenv("GITHUB_APP_ID")
@@ -175,7 +192,11 @@ def main_check_alerts():
             print(f"Error: {var} not found")
         sys.exit(1)
 
-    repo = get_github_repo(app_id, private_key, installation_id)
+    auth = Auth.AppAuth(app_id, private_key).get_installation_auth(installation_id)
+    github = Github(auth=auth)
+
+    repo = get_github_repo(github)
+
     ALERT_THRESHOLDS = get_thresholds_from_env()
     REPORT_MODE = os.getenv("INPUT_REPORT_MODE", "false").lower() == "true"
 
@@ -186,8 +207,11 @@ def main_check_alerts():
     pr_number = get_pr_number()
     post_pr_comment(repo, pr_number, output)
 
+    revoke_installation_token(github)
+
     if violations and not REPORT_MODE:
         sys.exit(1)
+
     sys.exit(0)
 
 

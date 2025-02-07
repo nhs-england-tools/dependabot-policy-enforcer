@@ -1,7 +1,7 @@
 import unittest
 import os
 import json
-from unittest.mock import patch, mock_open, Mock
+from unittest.mock import MagicMock, patch, mock_open, Mock
 from github import GithubException
 from datetime import datetime, timezone, timedelta
 
@@ -11,6 +11,7 @@ from check_alerts import (
     get_alert_age,
     get_thresholds_from_env,
     get_github_repo,
+    revoke_installation_token,
 )
 
 
@@ -195,29 +196,51 @@ class TestGetThresholdsFromEnv(unittest.TestCase):
 class TestGetGithubRepo(unittest.TestCase):
 
     @patch.dict(os.environ, {"GITHUB_REPOSITORY": "test_org/test_repo"})
-    @patch("check_alerts.Auth")
     @patch("check_alerts.Github")
-    def test_get_github_repo_success(self, mock_github, mock_auth):
+    def test_get_github_repo_success(self, mock_github):
         mock_repo = Mock()
         mock_repo.full_name = "test_org/test_repo"
-        mock_github.return_value.get_repo.return_value = mock_repo
+        mock_github.get_repo.return_value = mock_repo
 
-        repo = get_github_repo("app_id", "private_key", "installation_id")
+        repo = get_github_repo(mock_github)
 
         self.assertEqual(repo.full_name, "test_org/test_repo")
 
-    def test_get_github_repo_no_repo_name(self):
-        with patch.dict(os.environ, clear=True):
-            with self.assertRaises(AssertionError):
-                get_github_repo("app_id", "private_key", "installation_id")
+    @patch("check_alerts.os.getenv")
+    @patch("check_alerts.sys.exit")
+    def test_get_github_repo_no_repo_name(self, mock_exit, mock_getenv):
+        # Arrange
+        mock_getenv.return_value = None
+        mock_github = MagicMock()
+
+        # Act
+        get_github_repo(mock_github)
+
+        # Assert
+        mock_exit.assert_called_once_with(1)
 
     @patch.dict(os.environ, {"GITHUB_REPOSITORY": "test_org/test_repo"})
-    @patch("check_alerts.Auth")
     @patch("check_alerts.Github")
-    def test_get_github_repo_github_exception(self, mock_github, mock_auth):
-        mock_github.return_value.get_repo.side_effect = GithubException(
-            404, "Repo not found"
-        )
+    def test_get_github_repo_github_exception(self, mock_github):
+        mock_github.get_repo.side_effect = GithubException(404, "Repo not found")
 
         with self.assertRaises(GithubException):
-            get_github_repo("app_id", "private_key", "installation_id")
+            get_github_repo(mock_github)
+
+
+class TestRevokeInstallationToken(unittest.TestCase):
+    @patch("check_alerts.Github")
+    def test_revoke_installation_token(self, mock_github):
+        mock_github = mock_github.return_value
+        mock_requester = MagicMock()
+        mock_github.requester.return_value = mock_requester
+        mock_requester.requestJsonAndCheck.return_value = (
+            "headers",
+            json.dumps({"Status": 204}),
+        )
+
+        revoke_installation_token(mock_github)
+
+        mock_requester.requestJsonAndCheck.assert_called_once_with(
+            "DELETE", "/installation/token"
+        )
