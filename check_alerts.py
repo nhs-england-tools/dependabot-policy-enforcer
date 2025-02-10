@@ -6,19 +6,15 @@ from github import Auth, Github, GithubException, Repository
 import sys
 
 
-def get_pr_number(repo):
-    event_name = os.getenv("GITHUB_EVENT_NAME")
-    event_path = os.getenv("GITHUB_EVENT_PATH")
-    print(f"Event name: {event_name}")
-    event = {}
-
+def read_event_file(event_path):
     try:
-        if event_path:
-            with open(event_path) as f:
-                event = json.load(f)
+        with open(event_path) as f:
+            return json.load(f)
     except Exception as e:
         print(f"Error reading event file: {e}")
+        return {}
 
+def get_pr_number(repo, event_name, event):
     if event_name == "pull_request":
         print("This is a Pull Request")
         pr_number = event.get("pull_request", {}).get("number")
@@ -30,12 +26,10 @@ def get_pr_number(repo):
         ref = event.get("ref")
 
         if ref and ref.startswith("refs/heads/"):
-            branch_name = ref[len("refs/heads/") :]
+            branch_name = ref[len("refs/heads/"):]
             print(f"Branch name: {branch_name}")
             print(f"Owner: {repo.owner.login}")
-            pulls = repo.get_pulls(
-                state="open", head=f"{repo.owner.login}:{branch_name}"
-            )
+            pulls = repo.get_pulls(state="open", head=f"{repo.owner.login}:{branch_name}")
             for pr in pulls:
                 return pr.number
 
@@ -123,9 +117,11 @@ def analyze_alerts(alerts, ALERT_THRESHOLDS):
         severity = alert.security_advisory.severity.upper()
         age = get_alert_age(alert.created_at)
         threshold = ALERT_THRESHOLDS.get(severity)
+        dependency = alert.dependency
+        package = dependency.package
 
         alert_info = {
-            "package": alert.dependency.package.name,
+            "package": package.name,
             "severity": severity,
             "age_days": age,
             "threshold_days": threshold,
@@ -177,12 +173,15 @@ def post_pr_comment(repo, pr_number, output):
     if pr_number:
         try:
             create_or_update_pr_comment(repo, int(pr_number), output)
-        except Exception as e:
+        except GithubException as e:
             print(f"Error posting comment to PR: {e}")
             if e.status == 403:
                 print("Error: Insufficient permissions to post PR comments")
                 print("Please ensure workflow has 'pull-requests: write' permission")
-
+            raise
+        except Exception as e:
+            print(f"Error posting comment to PR: {e}")
+            raise
 
 def revoke_installation_token(github: Github):
     print("Completed: revoking token")
@@ -192,50 +191,47 @@ def revoke_installation_token(github: Github):
         print(f"Error revoking installation token: {e}")
         sys.exit(1)
 
-
-def main_check_alerts():
-    private_key = os.getenv("PRIVATE_KEY").replace("\\n", "\n")
-    app_id = os.getenv("APP_ID")
-    installation_id = os.getenv("INSTALLATION_ID")
-
-    missing_vars = []
-
-    if not private_key:
-        missing_vars.append("PRIVATE_KEY")
-
-    if not app_id:
-        missing_vars.append("APP_ID")
-
-    if not installation_id:
-        missing_vars.append("INSTALLATION_ID")
-
-    if missing_vars:
-        for var in missing_vars:
-            print(f"Error: {var} not found")
+def get_env_variable(name, default=None):
+    value = os.getenv(name, default)
+    if value is None:
+        print(f"Error: {name} not found")
         sys.exit(1)
+    return value
+
+def main_check_alerts(
+    github, repo, alert_thresholds, report_mode, event_name, event_path
+):
+    alerts = get_dependabot_alerts(repo)
+    violations, all_alerts = analyze_alerts(alerts, alert_thresholds)
+    output = format_alert_output(violations, all_alerts, report_mode)
+
+    event = read_event_file(event_path)
+    pr_number = get_pr_number(repo, event_name, event)
+    post_pr_comment(repo, pr_number, output)
+
+    revoke_installation_token(github)
+
+    if violations and not report_mode:
+        sys.exit(1)
+
+    sys.exit(0)
+
+if __name__ == "__main__":
+    private_key = get_env_variable("PRIVATE_KEY").replace("\\n", "\n")
+    app_id = get_env_variable("APP_ID")
+    installation_id = get_env_variable("INSTALLATION_ID")
 
     auth = Auth.AppAuth(app_id, private_key).get_installation_auth(int(installation_id))
     github = Github(auth=auth)
 
     repo = get_github_repo(github)
 
-    ALERT_THRESHOLDS = get_thresholds_from_env()
-    REPORT_MODE = os.getenv("INPUT_REPORT_MODE", "false").lower() == "true"
+    alert_thresholds = get_thresholds_from_env()
+    report_mode = os.getenv("INPUT_REPORT_MODE", "false").lower() == "true"
 
-    alerts = get_dependabot_alerts(repo)
-    violations, all_alerts = analyze_alerts(alerts, ALERT_THRESHOLDS)
-    output = format_alert_output(violations, all_alerts, REPORT_MODE)
+    event_name = get_env_variable("GITHUB_EVENT_NAME")
+    event_path = get_env_variable("GITHUB_EVENT_PATH")
 
-    pr_number = get_pr_number(repo)
-    post_pr_comment(repo, pr_number, output)
-
-    revoke_installation_token(github)
-
-    if violations and not REPORT_MODE:
-        sys.exit(1)
-
-    sys.exit(0)
-
-
-if __name__ == "__main__":
-    main_check_alerts()
+    main_check_alerts(
+        github, repo, alert_thresholds, report_mode, event_name, event_path
+    )
