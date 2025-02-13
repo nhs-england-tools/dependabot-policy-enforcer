@@ -124,3 +124,20 @@ jobs:
           idp_aws_report_upload_region: "${{ secrets.IDP_AWS_REPORT_UPLOAD_REGION }}"
           idp_aws_report_upload_role_name: "${{ secrets.IDP_AWS_REPORT_UPLOAD_ROLE_NAME }}"
           idp_aws_report_upload_bucket_endpoint: "${{ secrets.IDP_AWS_REPORT_UPLOAD_BUCKET_ENDPOINT }}"
+  dependabot-policy-enforcer:
+    name: "Dependabot policy enforcer"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v4
+      - name: "Dependabot policy enforcer"
+        uses: ./
+        with:
+          critical-threshold: 3
+          high-threshold: 5
+          medium-threshold: 14
+          low-threshold: 30
+          report-mode: true
+          github-app-id: ${{ secrets.APP_ID }}
+          github-installation-id: ${{ secrets.INSTALLATION_ID }}
+          github-app-private-key: ${{ secrets.PRIVATE_KEY }}

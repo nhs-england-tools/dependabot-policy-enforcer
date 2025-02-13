@@ -18,5 +18,7 @@ cd "$(git rev-parse --show-toplevel)"
 # tasks in scripts/test.mk.
 
 python -m pip install --upgrade pip
-pip install -r requirements.txt
-python -m unittest discover
+pip install -r test-requirements.txt
+coverage run --omit='*/test_*.py' -m unittest discover
+coverage report -m
+coverage xml

@@ -1,0 +1,61 @@
+name: 'Dependabot Policy Enforcer'
+description: 'Checks Dependabot alerts against configurable age thresholds and fails if alerts exceed their age limits'
+author: 'walteck'
+
+inputs:
+  critical-threshold:
+    description: 'Maximum age in days for Critical severity alerts'
+    required: false
+    default: '3'
+  high-threshold:
+    description: 'Maximum age in days for High severity alerts'
+    required: false
+    default: '5'
+  medium-threshold:
+    description: 'Maximum age in days for Medium severity alerts'
+    required: false
+    default: '14'
+  low-threshold:
+    description: 'Maximum age in days for Low severity alerts'
+    required: false
+    default: '30'
+  report-mode:
+    description: 'Mode to run the action in'
+    required: false
+    default: 'false'
+  github-app-id:
+    description: 'The app id for the Dependabot policy enforcer app'
+    required: true
+  github-installation-id:
+    description: 'The installation id for the Dependabot policy enforcer app installed at the organisation'
+    required: true
+  github-app-private-key:
+    description: 'The private key for the Dependabot policy enforcer app'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r ${{ github.action_path }}/requirements.txt
+
+    - name: Run alert checker
+      shell: bash
+      env:
+        INPUT_CRITICAL_THRESHOLD: ${{ inputs.critical-threshold }}
+        INPUT_HIGH_THRESHOLD: ${{ inputs.high-threshold }}
+        INPUT_MEDIUM_THRESHOLD: ${{ inputs.medium-threshold }}
+        INPUT_LOW_THRESHOLD: ${{ inputs.low-threshold }}
+        INPUT_REPORT_MODE: ${{ inputs.report-mode }}
+        APP_ID: ${{ inputs.github-app-id }}
+        INSTALLATION_ID: ${{ inputs.github-installation-id }}
+        PRIVATE_KEY: ${{ inputs.github-app-private-key }}
+      run: python ${{ github.action_path }}/check_alerts.py
