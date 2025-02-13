@@ -1,4 +1,4 @@
 # SEE: https://github.com/gitleaks/gitleaks/blob/master/README.md#gitleaksignore
 
 cd9c0efec38c5d63053dd865e5d4e207c0760d91:docs/guides/Perform_static_analysis.md:generic-api-key:37
-3d544f7a8e823c69c7f24d6276b5d910b1a6cb09:README.md:private-key:66
+0441327b48c27a476f322290caa902f9081cce53:README.md:private-key:66
