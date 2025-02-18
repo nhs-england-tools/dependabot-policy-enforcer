@@ -31,8 +31,8 @@ A GitHub Action that enforces age-based policies on Dependabot security alerts. 
 Clone the repository
 
 ```shell
-git clone https://github.com/nhs-england-tools/repository-template.git
-cd nhs-england-tools/repository-template
+git clone https://github.com/nhs-england-tools/dependabot-policy-enforcer.git
+cd nhs-england-tools/dependabot-policy-enforcer
 ```
 
 ### Prerequisites
@@ -45,11 +45,11 @@ The GitHub action needs to run as a GitHub App to have the required permissions 
 
 From the context of the organisation navigate to `Settings`. In the Organization settings navigate to `Developer settings` and select `GitHub Apps`. Press the `New GitHub App` button. Complete the Register new GitHub App page with the following values:
 
-`GitHub App name`: `dependabot-policy-enforcer`
-`Homepage URL`: The URL of the repository
-`Webhook`: deselect the `Active` checkbox
-Permissions
-`Repository permissions`:
+- `GitHub App name`: `dependabot-policy-enforcer`
+- `Homepage URL`: The URL of the repository
+- `Webhook`: deselect the `Active` checkbox
+
+Repository permissions:
 
 - `Dependabot alerts: Read-only` to access Dependabot alerts
 - `Metadata: Read-only` default permission
@@ -57,7 +57,7 @@ Permissions
 
 `Where can this GitHub App be installed?`: select `Any account`
 
-Press `Create GitHub App` button.
+Press the `Create GitHub App` button.
 
 Make a note of the App ID. This will need to be added as a secret to the target repository - or as an organisation level secret.
 
