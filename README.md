@@ -142,7 +142,7 @@ Next you will need to configure a ruleset to ensure this workflow executes on ev
 
 ## Configuring a ruleset
 
-Navigate to the organisation that you want to create the ruleset for. Select Settings and look for Repository in the left hand navigation, select this and select Rulesets. press the `New ruleset` button. Select `New branch ruleset`. Give this new ruleset a name - e.g. `dependabot-policy-enforcer`. select Enforcement status of `Evaluate`. 
+Navigate to the organisation that you want to create the ruleset for. Select Settings and look for Repository in the left hand navigation, select this and select Rulesets. press the `New ruleset` button. Select `New branch ruleset`. Give this new ruleset a name - e.g. `dependabot-policy-enforcer`. select Enforcement status of `Evaluate`.
 
 We now need to select Targets for the ruleset. Here we will use custom properties and only apply this to repositories that have a specific [custom property](https://docs.github.com/en/enterprise-cloud@latest/organizations/managing-organization-settings/creating-rulesets-for-repositories-in-your-organization#targeting-repositories-by-properties-in-your-organization) set. To do this, under Targets select `Include repositories by property`, under the Property drop down select an appropriate property - for example `Property: SubDirectorate` under the Value drop down select the appropriate value for your needs. Note this assumes that your organisation uses custom properties and has values set appropriately. Press `Add target`.
 
