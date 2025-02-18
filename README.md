@@ -146,7 +146,7 @@ Navigate to the organisation that you want to create the ruleset for. Select Set
 
 We now need to select Targets for the ruleset. Here we will use custom properties and only apply this to repositories that have a specific [custom property](https://docs.github.com/en/enterprise-cloud@latest/organizations/managing-organization-settings/creating-rulesets-for-repositories-in-your-organization#targeting-repositories-by-properties-in-your-organization) set. To do this, under Targets select `Include repositories by property`, under the Property drop down select an appropriate property - for example `Property: SubDirectorate` under the Value drop down select the appropriate value for your needs. Note this assumes that your organisation uses custom properties and has values set appropriately. Press `Add target`.
 
-Under Bypass list we need to exclude Dependabot from these runs as the permissions are configured such that dependabot has its own set of secrets. Press `Add bypass` and search for Dependabot - place a check mark next to this bot entry.
+Under Bypass list we need to exclude Dependabot from these runs as the permissions are configured such that Dependabot has its own set of secrets. Press `Add bypass` and search for Dependabot - place a check mark next to this bot entry.
 
 Under `Target branches` select to add a target and choose the All branches option.
 
@@ -155,7 +155,7 @@ Under `Target branches` select to add a target and choose the All branches optio
 Remove the check mark against the Restrict deletions rule.
 Remove the check mark against the Block force pushes rule.
 Add a check mark against the Require workflows to pass before merging rule.
-Press the `Add workflow` button and select the `org-workflows` repo created earlier. Select the main branch to ensure only peer reviewed changes are used. in pick a workflow file enter the following `.github/workflows/dependabot-policy-enforcer.yml` press `Add workflow`
+Press the `Add workflow` button and select the `org-workflows` repository created earlier. Select the main branch to ensure only peer reviewed changes are used. in pick a workflow file enter the following `.github/workflows/dependabot-policy-enforcer.yml` press `Add workflow`
 
 Press the `Create` button.
 
