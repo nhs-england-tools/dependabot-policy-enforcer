@@ -89,8 +89,14 @@ def get_github_repo(github: Github):
 
 def get_dependabot_alerts(repo):
     try:
+<<<<<<< Updated upstream
         alerts = repo.get_dependabot_alerts()
         print("returned alerts")
+=======
+        alerts = repo.get_dependabot_alerts(state="open")
+        alerts_list = list(alerts)
+        print(f"Returned {len(alerts_list)} alerts")
+>>>>>>> Stashed changes
         return alerts
     except GithubException as e:
         print(f"Error: {e}")
