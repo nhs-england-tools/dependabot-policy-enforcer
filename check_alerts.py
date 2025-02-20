@@ -89,7 +89,7 @@ def get_github_repo(github: Github):
 
 def get_dependabot_alerts(repo):
     try:
-        alerts = repo.get_dependabot_alerts()
+        alerts = repo.get_dependabot_alerts(state="open")
         alerts_list = list(alerts)
         print(f"Returned {len(alerts_list)} alerts")
         return alerts
