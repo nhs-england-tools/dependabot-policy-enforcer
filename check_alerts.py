@@ -90,9 +90,12 @@ def get_github_repo(github: Github):
 def get_dependabot_alerts(repo):
     try:
         alerts = repo.get_dependabot_alerts()
-        print("returned alerts")
+        alerts_list = list(alerts)
+        print(f"Returned {len(alerts_list)} alerts")
         return alerts
     except GithubException as e:
+        if e.status == 403 and e.data.get('message', '') == "Dependabot alerts are disabled for this repository.":
+            return []
         print(f"Error: {e}")
         if e.status == 403:
             print("Error: Insufficient permissions to access Dependabot alerts")
