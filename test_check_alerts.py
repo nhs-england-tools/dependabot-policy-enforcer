@@ -217,7 +217,7 @@ class TestGetDependabotAlerts(unittest.TestCase):
         self.repo.get_dependabot_alerts.assert_called_once()
 
     def test_get_dependabot_alerts_github_exception(self):
-        self.repo.get_dependabot_alerts.side_effect = GithubException(403, "Forbidden", None)
+        self.repo.get_dependabot_alerts.side_effect = GithubException(403, {"message": "Forbidden"})
 
         with self.assertRaises(SystemExit) as cm:
             get_dependabot_alerts(self.repo)
@@ -230,6 +230,20 @@ class TestGetDependabotAlerts(unittest.TestCase):
         with self.assertRaises(Exception) as cm:
             get_dependabot_alerts(self.repo)
         self.assertEqual(str(cm.exception), "General error")
+        self.repo.get_dependabot_alerts.assert_called_once()
+
+    def test_get_dependabot_alerts_disabled(self):
+        self.repo.get_dependabot_alerts.side_effect = GithubException(
+            403,
+            {
+                "message": "Dependabot alerts are disabled for this repository.", 
+                "documentation_url": "https://docs.github.com/rest/dependabot/alerts#list-dependabot-alerts-for-a-repository", 
+                "status": "403"
+            }
+        )
+
+        alerts = get_dependabot_alerts(self.repo)
+        self.assertEqual(alerts, [])
         self.repo.get_dependabot_alerts.assert_called_once()
 
 class TestAnalyzeAlerts(unittest.TestCase):
