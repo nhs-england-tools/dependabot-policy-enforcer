@@ -236,8 +236,8 @@ class TestGetDependabotAlerts(unittest.TestCase):
         self.repo.get_dependabot_alerts.side_effect = GithubException(
             403,
             {
-                "message": "Dependabot alerts are disabled for this repository.", 
-                "documentation_url": "https://docs.github.com/rest/dependabot/alerts#list-dependabot-alerts-for-a-repository", 
+                "message": "Dependabot alerts are disabled for this repository.",
+                "documentation_url": "https://docs.github.com/rest/dependabot/alerts#list-dependabot-alerts-for-a-repository",
                 "status": "403"
             }
         )
