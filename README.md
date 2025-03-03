@@ -181,6 +181,7 @@ permissions:
 
 jobs:
   check-alerts:
+    if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: nhs-england-tools/dependabot-policy-enforcer

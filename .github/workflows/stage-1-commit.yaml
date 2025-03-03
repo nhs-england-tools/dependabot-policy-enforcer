@@ -125,9 +125,9 @@ jobs:
           idp_aws_report_upload_role_name: "${{ secrets.IDP_AWS_REPORT_UPLOAD_ROLE_NAME }}"
           idp_aws_report_upload_bucket_endpoint: "${{ secrets.IDP_AWS_REPORT_UPLOAD_BUCKET_ENDPOINT }}"
   dependabot-policy-enforcer:
+    if: github.actor != 'dependabot[bot]'
     name: "Dependabot policy enforcer"
     runs-on: ubuntu-latest
-    if: github.actor != 'dependabot[bot]'
     steps:
       - name: "Checkout code"
         uses: actions/checkout@v4
